@@ -52,7 +52,13 @@
 ; The First Commandment (preliminary)
 ; Always ask null? as the first question in expressing any function.
 
+(member? 'liver '(bagels and lox))
 
+; Most of this chapter is walking through recursive function
+; step by step so that the reader can see how each function
+; executes.  There isn't much to type up that isn't just tracing
+; through the execution of the recursive function, so I'm going
+; to skip that.
 
 
 
