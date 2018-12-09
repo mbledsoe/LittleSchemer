@@ -50,9 +50,35 @@
 ; When building a list, describe teh first typical element, and
 ; then cons it onto the natural recursion.
 
+(define insertR
+  (lambda (new old lat)
+    (cond
+      ((null? lat) '())
+      ((eq? (car lat) old) (cons old (cons new (cdr lat))))
+      (else (cons (car lat) (insertR new old (cdr lat)))))))
 
+(insertR 'topping 'fudge '(ice cream with fudge for dessert))
 
+(insertR 'jalapeno 'and '(tacos tamales and salsa))
 
+(define insertL
+  (lambda (new old lat)
+    (cond
+      ((null? lat) '())
+      ((eq? (car lat) old) (cons new lat))
+      (else (cons (car lat) (insertL new old (cdr lat)))))))
+
+(insertL 'test 'typing '(welcome to the typing test))
+; just a quick test since there isn't one in the book
+
+(define subst
+  (lambda (new old lat)
+    (cond
+      ((null? lat) '())
+      ((eq? (car lat) old) (cons new (cdr lat)))
+      (else (cons (car lat) (subst new old (cdr lat)))))))
+
+(subst 'topping 'fudge '(ice cream with fudge for dessert))    
 
 
 
