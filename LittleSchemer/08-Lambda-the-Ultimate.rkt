@@ -101,9 +101,60 @@
 
 (define seqL
   (lambda (new old l)
-    (cons new (cons old (l)))))
+    (cons new (cons old l))))
 
 (define seqR
   (lambda (new old l)
-    (cons old (cons new (l)))))
+    (cons old (cons new l))))
+
+(define insertL (insert-g seqL))
+
+(define insertR (insert-g seqR))
+
+(define insertL2
+  (insert-g
+   (lambda (new old l)
+     (cons new (cons old l)))))
+
+(define subst
+  (lambda (new old l)
+    (cond
+      ((null? l) '())
+      ((eq? (car l) old) (cons new (cdr l)))
+      (else (cons (car l) (subst new old (cdr l)))))))
+
+(define seqS
+  (lambda (new old l)
+    (cons new l)))
+
+(define subst2
+  (insert-g seqS))
+
+; I question the instructional value of this part.  The interface to seqrem
+; doesn't seem to make a lot of sense and we have dummy values such
+; as #f being passed as a result.  There is no "new" for seqrem since
+; it does not perform a substitution or insert.
+(define seqrem
+  (lambda (new old l) l))
+
+(define rember2
+  (lambda (a l)
+    ((insert-g seqrem) #f a l)))
+
+(rember2 'sausage '(pizza with sausage and bacon))
+
+; The Ninth Commandment
+; Abstract common patterns with a new function
+
+
+
+
+
+
+
+
+
+
+
+
 
