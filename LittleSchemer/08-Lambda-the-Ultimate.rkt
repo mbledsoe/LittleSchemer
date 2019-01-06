@@ -146,15 +146,227 @@
 ; The Ninth Commandment
 ; Abstract common patterns with a new function
 
+(define atom-to-function
+  (lambda (x)
+    (cond
+      ((eq? x '+) +)
+      ((eq? x 'x) *)
+      ((eq? x '^) expt)
+      )))
+
+(define 1st-sub-exp
+  (lambda (aexp)
+    (car (cdr aexp))))
+
+(define 2nd-sub-exp
+  (lambda (aexp)
+    (car (cdr (cdr aexp)))))
+
+(define operator
+  (lambda (aexp)
+    (car aexp)))
+
+(atom-to-function (operator '(+ 5 3)))
+
+(define value
+  (lambda (nexp)
+    (cond
+      ((atom? nexp) nexp)
+      (else ((atom-to-function (operator nexp))
+             (value (1st-sub-exp nexp))
+             (value (2nd-sub-exp nexp))))
+      )))
+
+(value (1st-sub-exp '(+ 5 3)))
+(value (2nd-sub-exp '(+ 5 3)))
+(value '(+ 5 3))
 
 
+(define multirember
+  (lambda (a lat)
+    (cond
+      ((null? lat) '())
+      ((eq? (car lat) a) (multirember a (cdr lat)))
+      (else (cons (car lat) (multirember a (cdr lat)))))))
+
+(define multirember-f
+  (lambda (test?)
+    (lambda (a lat)
+      (cond
+        ((null? lat) '())
+        ((test? a (car lat)) ((multirember-f test?) a (cdr lat)))
+        (else (cons (car lat) ((multirember-f test?) a (cdr lat))))
+        ))))
+
+((multirember-f eq?) 'tuna '(shrimp salad tuna salad and))
+
+(define multirember-eq?
+  (multirember-f eq?))
+
+(define eq?-tuna
+  (eq?-c 'tuna))
 
 
+(define multiremberT
+  (lambda (test? lat)
+      (cond
+        ((null? lat) '())
+        ((test? (car lat)) (multiremberT test? (cdr lat)))
+        (else (cons (car lat) (multiremberT test? (cdr lat))))
+        )))
+
+(multiremberT eq?-tuna '(shrimp salad tuna salad and))
+
+(define multirember&co
+  (lambda (a lat col)
+    (cond
+      ((null? lat) (col '() '()))
+      ((eq? (car lat) a)
+       (multirember&co a
+                       (cdr lat)
+                       (lambda (newlat seen)
+                         (col newlat
+                              (cons (car lat) seen)))))
+      (else
+       (multirember&co a
+                       (cdr lat)
+                       (lambda (newlat seen)
+                         (col (cons (car lat) newlat) seen)))))))
+
+(define a-friend
+  (lambda (x y)
+    (null? y)))
+
+(multirember&co 'tuna '(strawberries tuna and swordfish) a-friend)
+
+(multirember&co 'tuna '() a-friend)
+
+(multirember&co 'tuna '(tuna) a-friend)
+
+(define last-friend
+  (lambda (x y)
+    (length x)))
+
+(multirember&co 'tuna '(strawberries tuna and swordfish) last-friend)
+
+; The Tenth Commandment
+; Build functions to collect more than one value at a time.
+
+(define multiinsertR
+  (lambda (new old lat)
+    (cond
+      ((null? lat) '())
+      ((eq? (car lat) old) (cons old (cons new (multiinsertR new old (cdr lat)))))
+      (else (cons (car lat) (multiinsertR new old (cdr lat)))))))
+
+(define multiinsertL
+  (lambda (new old lat)
+    (cond
+      ((null? lat) '())
+      ((eq? (car lat) old) (cons new (cons old (multiinsertL new old (cdr lat)))))
+      (else (cons (car lat) (multiinsertL new old (cdr lat)))))))
+
+(define multiinsertLR
+  (lambda (new oldL oldR lat)
+    (cond
+      ((null? lat) '())
+      ((eq? (car lat) oldL)
+       (cons new (cons oldL (multiinsertLR new oldL oldR (cdr lat)))))
+      ((eq? (car lat) oldR)
+       (cons oldR (cons new (multiinsertLR new oldL oldR (cdr lat)))))
+      (else
+       (cons (car lat) (multiinsertLR new oldL oldR (cdr lat))))
+      )))
+
+(multiinsertLR 'tuna 'fish 'cake '(fish cake))
+
+(define multiinsertLR&co
+  (lambda (new oldL oldR lat col)
+    (cond
+      ((null? lat) (col '() 0 0))
+      ((eq? (car lat) oldL)       
+       (multiinsertLR&co new
+                         oldL
+                         oldR
+                         (cdr lat)
+                         (lambda (newlat L R) (col (cons new (cons oldL newlat)) (add1 L) R))))
+      ((eq? (car lat) oldR)
+       (multiinsertLR&co new
+                         oldL
+                         oldR
+                         (cdr lat)
+                         (lambda (newlat L R) (col (cons oldR (cons new newlat)) L (add1 R)))))
+      (else
+       (cons (car lat) (multiinsertLR&co new
+                                      oldL
+                                      oldR
+                                      (cdr lat)
+                                      (lambda (newlat L R) (col (cons (car lat) newlat) L R)))))
+      )))
+
+(multiinsertLR&co 'salty 'fish 'chips '(chips and fish or fish and chips)
+                  (lambda (newlat L R)
+                    (display newlat)
+                    (display "\n")
+                    (display L)
+                    (display "\n")
+                    (display R)
+                    (display "\n")))
+
+(define even?
+  (lambda (n)
+    (= (* (quotient n 2) 2) n)))
+
+(even? 2)
+(even? 4)
+(even? 5)
+
+(define evens-only*
+  (lambda (l)
+    (cond      
+      ((null? l) '())
+      ((atom? (car l))
+       (cond
+         ((even? (car l)) (cons (car l) (evens-only* (cdr l))))
+         (else (evens-only* (cdr l)))))
+      (else (cons (evens-only* (car l))
+                  (evens-only* (cdr l))))
+      )))
+
+(evens-only* '((2 4 6) 1 (1 2 3) 2 3 4 5 6 7 8))
+(evens-only* '((9 1 2 8) 3 10 ((9 9) 7 6) 2))
+
+(define evens-only*&co
+  (lambda (l col)
+    (cond      
+      ((null? l) (col '() 1 0))
+      ((atom? (car l))
+       (cond
+         ((even? (car l))
+          (evens-only*&co (cdr l)
+                          (lambda (newlat evenProd oddSum)
+                            (col (cons (car l) newlat)
+                                 (* (car l) evenProd)
+                                 oddSum))))
+         (else
+          (evens-only*&co (cdr l)
+                          (lambda (newlat evenProd oddSum)
+                            (col newlat
+                                 evenProd
+                                 (+ (car l) oddSum)))))))
+      (else (evens-only*&co (car l)
+                            (lambda (al ap as)
+                              (evens-only*&co (cdr l)
+                                              (lambda (dl dp ds)
+                                                (col (cons al dl)
+                                                     (* ap dp)
+                                                     (* as ds)))))))
+      )))
 
 
+(define the-last-friend
+  (lambda (newl product sum)
+    (cons sum (cons product newl))))
 
-
-
-
-
-
+(evens-only*&co '((9 1 2 8) 3 10 ((9 9) 7 6) 2) the-last-friend)
+                
