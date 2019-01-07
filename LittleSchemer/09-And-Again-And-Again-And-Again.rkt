@@ -268,6 +268,18 @@
 
 ; Re-introducing length function
 ; Note - this does not work because mk-length is immediately applied and causes infinite evaluation
+;((lambda (mk-length)
+;   (mk-length mk-length))
+; (lambda (mk-length)
+;   ((lambda (length)
+;      (lambda (l)
+;        (cond
+;          ((null? l) 0)
+;          (else (add1 (length (cdr l)))))))
+;    (mk-length mk-length))))
+
+
+; This is fixed by declaring it as a lambda
 ((lambda (mk-length)
    (mk-length mk-length))
  (lambda (mk-length)
@@ -276,7 +288,47 @@
         (cond
           ((null? l) 0)
           (else (add1 (length (cdr l)))))))
-    (mk-length mk-length))))
+    (lambda (x)
+      ((mk-length mk-length) x)))))
+
+; Extract the length part because it does not depend on mk-length
+((lambda (le)
+   ((lambda (mk-length)
+      (mk-length mk-length))
+    (lambda (mk-length)
+      (le (lambda (x) ((mk-length mk-length) x))))))
+ (lambda (length)
+   (lambda (l)
+     (cond
+       ((null? l) 0)
+       (else (add1 (length (cdr l))))))))
+
+; Extract the part that makes the functions
+(lambda (le)
+  (lambda (mk-length)
+    (mk-length mk-length))
+  (lambda (mk-length)
+    (le (lambda (x) (mk-length mk-length) x))))
+
+; Which is the applicative order Y combinator.
+(define Y
+  (lambda (le)
+    ((lambda (f) (f f))
+     (lambda (f)
+       (le (lambda (x) ((f f) x)))))))
+
+(define lengthY
+  (Y (lambda (length)
+       (lambda (l)
+         (cond
+           ((null? l) 0)
+           (else (add1 (length (cdr l)))))))))
+
+(lengthY '(one two three))
+(lengthY '(apples oranges pears and butter))
+
+
+
 
 
 
