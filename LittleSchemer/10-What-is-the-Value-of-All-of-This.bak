@@ -1,0 +1,24 @@
+#lang racket
+
+(define atom?
+  (lambda (x)
+    (and (not (pair? x)) (not (null? x)))))
+
+(define build
+  (lambda (x1 x2)
+    (cons x1 (cons x2 '()))))
+
+(define new-entry build)
+
+(new-entry
+ '(appetizer entree beverage)
+ '(pate boeuf vin))
+
+(new-entry
+ '(appetizer entree beverage)
+ '(beer beer beer))
+
+(new-entry
+ '(beverage dessert)
+ '((food is) (number one with us)))
+
